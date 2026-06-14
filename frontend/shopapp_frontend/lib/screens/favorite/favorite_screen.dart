@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../../providers/cart_provider.dart';
 import '../../models/product.dart';
+import '../../services/category_service.dart';
+import '../../core/constants/api_constants.dart';
 import '../shop/product_detail_screen.dart';
+import '../shop/filters_screen.dart';
+
+class FavoriteFilterItem {
+  final String id;
+  final String name;
+  final bool isTag;
+
+  FavoriteFilterItem({
+    required this.id,
+    required this.name,
+    required this.isTag,
+  });
+}
 
 class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({super.key});
@@ -13,13 +30,145 @@ class FavoriteScreen extends StatefulWidget {
 
 class _FavoriteScreenState extends State<FavoriteScreen> {
   bool isGridView = false; // Toggle layout (false = List, true = Grid)
-  String selectedCategory = ""; // Summer, T-Shirts, Shirts, Hoodies, etc.
   String selectedSort = "Price: lowest to high"; 
   bool isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   String searchQuery = "";
 
-  final List<String> categories = ["Summer", "T-Shirts", "Shirts", "Hoodies"];
+  List<FavoriteFilterItem> filterItems = [];
+  bool isLoadingFilters = true;
+  FavoriteFilterItem? selectedFilter;
+  bool _isFilteringProducts = false;
+  Set<String>? _currentFilterProductIds;
+  final Map<String, Set<String>> _filterProductIdsCache = {};
+
+  double minPrice = 0;
+  double maxPrice = 2000000;
+  String? selectedSize;
+  String? selectedColor;
+  String? selectedCategoryName;
+  String? selectedBrand;
+  Set<String> _categoryFilterProductIds = {};
+
+  Future<Set<String>> _getProductIdsForCategoryName(String catName) async {
+    String searchName = catName;
+    if (catName == "Boys" || catName == "Girls") {
+      searchName = "Kids";
+    }
+
+    String? targetCatId;
+    for (var item in filterItems) {
+      if (!item.isTag && item.name.toLowerCase() == searchName.toLowerCase()) {
+        targetCatId = item.id;
+        break;
+      }
+    }
+    if (targetCatId == null) return {};
+
+    if (_filterProductIdsCache.containsKey(targetCatId)) {
+      return _filterProductIdsCache[targetCatId]!;
+    }
+
+    Set<String> productIds = {};
+    try {
+      final response = await CategoryService().getProductsByCategory(targetCatId);
+      for (var p in response.products) {
+        productIds.add(p.id);
+      }
+      _filterProductIdsCache[targetCatId] = productIds;
+    } catch (e) {
+      debugPrint("Error fetching products for category $searchName: $e");
+    }
+    return productIds;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFilters();
+  }
+
+  Future<void> _loadFilters() async {
+    try {
+      final cats = await CategoryService().getCategories();
+      final tagsResponse = await http.get(
+        Uri.parse("${ApiConstants.baseUrl}/api/tags"),
+      );
+      List<dynamic> tagsData = [];
+      if (tagsResponse.statusCode == 200) {
+        tagsData = jsonDecode(utf8.decode(tagsResponse.bodyBytes));
+      }
+
+      setState(() {
+        filterItems = [
+          ...cats.map((c) => FavoriteFilterItem(id: c.id, name: c.categoryName, isTag: false)),
+          ...tagsData.map((t) => FavoriteFilterItem(id: t["id"], name: t["tagName"], isTag: true)),
+        ];
+        isLoadingFilters = false;
+      });
+    } catch (e) {
+      debugPrint("Error loading filters: $e");
+      setState(() {
+        isLoadingFilters = false;
+      });
+    }
+  }
+
+  Future<void> _onFilterSelected(FavoriteFilterItem? item) async {
+    if (item == null) {
+      setState(() {
+        selectedFilter = null;
+        _currentFilterProductIds = null;
+      });
+      return;
+    }
+
+    setState(() {
+      selectedFilter = item;
+      _isFilteringProducts = true;
+    });
+
+    try {
+      if (_filterProductIdsCache.containsKey(item.id)) {
+        setState(() {
+          _currentFilterProductIds = _filterProductIdsCache[item.id];
+          _isFilteringProducts = false;
+        });
+        return;
+      }
+
+      Set<String> productIds = {};
+      if (item.isTag) {
+        final response = await http.get(
+          Uri.parse("${ApiConstants.baseUrl}/api/product-tags/tag/${item.id}"),
+        );
+        if (response.statusCode == 200) {
+          final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+          for (var pt in data) {
+            if (pt["product"] != null && pt["product"]["id"] != null) {
+              productIds.add(pt["product"]["id"].toString());
+            }
+          }
+        }
+      } else {
+        final categoryResponse = await CategoryService().getProductsByCategory(item.id);
+        for (var p in categoryResponse.products) {
+          productIds.add(p.id);
+        }
+      }
+
+      _filterProductIdsCache[item.id] = productIds;
+      setState(() {
+        _currentFilterProductIds = productIds;
+        _isFilteringProducts = false;
+      });
+    } catch (e) {
+      debugPrint("Error loading products for filter ${item.name}: $e");
+      setState(() {
+        _isFilteringProducts = false;
+      });
+    }
+  }
 
   // Helpers to format prices and match screenshots exactly
   String getBrand(String name) {
@@ -163,22 +312,44 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
       ).toList();
     }
 
-    // 2. Category filtering
-    if (selectedCategory.isNotEmpty) {
-      filteredWishlist = filteredWishlist.where((p) {
-        final name = p.productName.toLowerCase();
-        if (selectedCategory == "Summer") {
-          return name.contains("summer") || name.contains("váy") || name.contains("short") || name.contains("violeta");
-        } else if (selectedCategory == "T-Shirts") {
-          return name.contains("t-shirt") || name.contains("tshirt") || name.contains("tee");
-        } else if (selectedCategory == "Shirts") {
-          return name.contains("shirt") && !name.contains("t-shirt");
-        } else if (selectedCategory == "Hoodies") {
-          return name.contains("hoodie") || name.contains("khoác");
-        }
-        return true;
-      }).toList();
+    // 2. Category/Tag filtering
+    if (selectedFilter != null && _currentFilterProductIds != null) {
+      filteredWishlist = filteredWishlist.where((p) =>
+        _currentFilterProductIds!.contains(p.id)
+      ).toList();
     }
+
+    // 2.5. FiltersScreen filtering
+    filteredWishlist = filteredWishlist.where((p) {
+      final price = p.discountPrice > 0 ? p.discountPrice : p.regularPrice;
+      if (price < minPrice || price > maxPrice) return false;
+
+      if (selectedColor != null) {
+        var pColor = getColorText(p).toLowerCase();
+        var sColor = selectedColor!.toLowerCase();
+        if (pColor == "gray") pColor = "grey";
+        if (sColor == "gray") sColor = "grey";
+        if (pColor == "blue" && sColor == "navy") pColor = "navy";
+        if (pColor == "orange" && sColor == "beige") pColor = "beige";
+        if (pColor != sColor) return false;
+      }
+
+      if (selectedSize != null) {
+        final pSize = getSizeText(p).toLowerCase();
+        if (pSize != selectedSize!.toLowerCase()) return false;
+      }
+
+      if (selectedCategoryName != null) {
+        if (!_categoryFilterProductIds.contains(p.id)) return false;
+      }
+
+      if (selectedBrand != null) {
+        final pBrand = getBrand(p.productName).toLowerCase();
+        if (pBrand != selectedBrand!.toLowerCase()) return false;
+      }
+
+      return true;
+    }).toList();
 
     // 3. Sorting
     if (selectedSort == "Price: lowest to high") {
@@ -217,7 +388,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                   });
                 },
               )
-            : (isGridView 
+            : (isGridView
                 ? const Text(
                     "Favorites",
                     style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
@@ -257,10 +428,9 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Big title "Favorites" (visible in List layout or when searching/filtering if in list view)
-                if (!isSearching && !isGridView)
+                if (!isGridView && !isSearching) ...[
                   const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
                     child: Text(
                       "Favorites",
                       style: TextStyle(
@@ -270,43 +440,44 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                       ),
                     ),
                   ),
+                ],
 
-                // Category selection chips
+                // Category/Tag selection chips
                 SizedBox(
                   height: 40,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      final isSelected = selectedCategory == category;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: ChoiceChip(
-                          label: Text(
-                            category,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          selected: isSelected,
-                          selectedColor: const Color(0xFF222222),
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          side: BorderSide.none,
-                          onSelected: (selected) {
-                            setState(() {
-                              selectedCategory = selected ? category : "";
-                            });
+                  child: isLoadingFilters
+                      ? const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: filterItems.length,
+                          itemBuilder: (context, index) {
+                            final item = filterItems[index];
+                            final isSelected = selectedFilter?.id == item.id;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ChoiceChip(
+                                label: Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    color: isSelected ? Colors.white : Colors.black,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                selected: isSelected,
+                                selectedColor: const Color(0xFF222222),
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                side: BorderSide.none,
+                                onSelected: (selected) {
+                                  _onFilterSelected(selected ? item : null);
+                                },
+                              ),
+                            );
                           },
                         ),
-                      );
-                    },
-                  ),
                 ),
 
                 const SizedBox(height: 12),
@@ -324,10 +495,42 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                           const Icon(Icons.filter_list, size: 18, color: Colors.black),
                           const SizedBox(width: 6),
                           GestureDetector(
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Filters clicked")),
+                            onTap: () async {
+                              final result = await Navigator.push<Map<String, dynamic>>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => FiltersScreen(
+                                    initialMinPrice: minPrice,
+                                    initialMaxPrice: maxPrice,
+                                    initialSize: selectedSize,
+                                    initialColor: selectedColor,
+                                    initialCategory: selectedCategoryName,
+                                    initialBrand: selectedBrand,
+                                  ),
+                                ),
                               );
+
+                              if (result != null) {
+                                final catName = result["category"] as String?;
+                                Set<String> catProductIds = {};
+                                if (catName != null) {
+                                  setState(() {
+                                    _isFilteringProducts = true;
+                                  });
+                                  catProductIds = await _getProductIdsForCategoryName(catName);
+                                }
+
+                                setState(() {
+                                  minPrice = result["minPrice"] ?? 0;
+                                  maxPrice = result["maxPrice"] ?? 2000000;
+                                  selectedSize = result["size"];
+                                  selectedColor = result["color"];
+                                  selectedCategoryName = catName;
+                                  selectedBrand = result["brand"];
+                                  _categoryFilterProductIds = catProductIds;
+                                  _isFilteringProducts = false;
+                                });
+                              }
                             },
                             child: const Text(
                               "Filters",
@@ -369,16 +572,19 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
 
                 // Product items grid or list
                 Expanded(
-                  child: filteredWishlist.isEmpty
-                      ? const Center(
-                          child: Text(
-                            "Không tìm thấy sản phẩm phù hợp",
-                            style: TextStyle(color: Colors.black54, fontSize: 16),
-                          ),
-                        )
-                      : (isGridView 
-                          ? _buildGridView(context, filteredWishlist, cartProvider, primaryColor)
-                          : _buildListView(context, filteredWishlist, cartProvider, primaryColor)
+                  child: _isFilteringProducts
+                      ? const Center(child: CircularProgressIndicator())
+                      : (filteredWishlist.isEmpty
+                          ? const Center(
+                              child: Text(
+                                "Không tìm thấy sản phẩm phù hợp",
+                                style: TextStyle(color: Colors.black54, fontSize: 16),
+                              ),
+                            )
+                          : (isGridView 
+                              ? _buildGridView(context, filteredWishlist, cartProvider, primaryColor)
+                              : _buildListView(context, filteredWishlist, cartProvider, primaryColor)
+                            )
                         ),
                 ),
               ],

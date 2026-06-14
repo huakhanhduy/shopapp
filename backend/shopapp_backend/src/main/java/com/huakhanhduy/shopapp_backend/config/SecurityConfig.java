@@ -86,7 +86,8 @@ public class SecurityConfig {
                                                                 "/api/categories",
                                                                 "/api/categories/**",
                                                                 "/api/tags",
-                                                                "/api/tags/**")
+                                                                "/api/tags/**",
+                                                                "/api/product-tags/**")
                                                 .permitAll()
 
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**")

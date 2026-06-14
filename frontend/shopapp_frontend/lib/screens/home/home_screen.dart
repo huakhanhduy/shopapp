@@ -6,6 +6,7 @@ import '../../models/home_response.dart';
 import '../../models/home_section.dart';
 import '../../services/home_service.dart';
 import '../../providers/cart_provider.dart';
+import '../../core/widgets/image_helper.dart';
 import '../shop/product_detail_screen.dart';
 import '../shop/catalog_screen.dart';
 
@@ -156,10 +157,8 @@ class HomeScreenState extends State<HomeScreen> {
                               Positioned.fill(
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
-
-                                  child: Image.asset(
+                                  child: buildProductImage(
                                     product.imageUrl,
-
                                     fit: BoxFit.cover,
                                   ),
                                 ),

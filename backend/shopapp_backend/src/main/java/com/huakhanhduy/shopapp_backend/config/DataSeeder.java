@@ -12,8 +12,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-//@Component
+
+@Component
 public class DataSeeder implements CommandLineRunner {
+
 
     private final RoleRepository roleRepository;
     private final StaffAccountRepository staffAccountRepository;
@@ -558,138 +560,138 @@ public class DataSeeder implements CommandLineRunner {
         // ============================================================
         // ---- KIDS > TOPS (5 sản phẩm) ----
         // ============================================================
-        p("Dino Print Kids Tee",           "dino-print-kids-tee",            "SKU-K-TOP-001", "assets/images/pro_k_top_1.png",
+        p("Dino Print Kids Tee",           "dino-print-kids-tee",            "SKU-K-TOP-001", "https://picsum.photos/id/50/600/600",
           150000.0, 120000.0, ProductType.TSHIRT, kidsTops,
           List.of(kidsTag, newTag),    nike,    adminStaff, customerCust, adminCust, false);
 
-        p("Unicorn Sparkle Top",           "unicorn-sparkle-top",            "SKU-K-TOP-002", "assets/images/pro_k_top_2.png",
+        p("Unicorn Sparkle Top",           "unicorn-sparkle-top",            "SKU-K-TOP-002", "https://picsum.photos/id/51/600/600",
           180000.0, 144000.0, ProductType.TSHIRT, kidsTops,
           List.of(kidsTag, trendTag),  zara,    adminStaff, customerCust, adminCust, false);
 
-        p("Cartoon Character Crop Tee",    "cartoon-character-crop-tee",     "SKU-K-TOP-003", "assets/images/pro_k_top_3.png",
+        p("Cartoon Character Crop Tee",    "cartoon-character-crop-tee",     "SKU-K-TOP-003", "https://picsum.photos/id/52/600/600",
           140000.0, 112000.0, ProductType.TSHIRT, kidsTops,
           List.of(kidsTag, saleTag),   hm,      adminStaff, customerCust, adminCust, false);
 
-        p("Rainbow Stripe Kids Top",       "rainbow-stripe-kids-top",        "SKU-K-TOP-004", "assets/images/pro_k_top_4.png",
+        p("Rainbow Stripe Kids Top",       "rainbow-stripe-kids-top",        "SKU-K-TOP-004", "https://picsum.photos/id/53/600/600",
           165000.0, 132000.0, ProductType.TSHIRT, kidsTops,
           List.of(kidsTag, casualTag), gap,     adminStaff, customerCust, adminCust, false);
 
-        p("Sports Performance Kids Tee",   "sports-performance-kids-tee",    "SKU-K-TOP-005", "assets/images/pro_k_top_5.png",
+        p("Sports Performance Kids Tee",   "sports-performance-kids-tee",    "SKU-K-TOP-005", "https://picsum.photos/id/54/600/600",
           200000.0, 160000.0, ProductType.TSHIRT, kidsTops,
           List.of(kidsTag, sportTag),  adidas,  adminStaff, customerCust, adminCust, false);
 
         // ============================================================
         // ---- KIDS > SHIRTS (5 sản phẩm) ----
         // ============================================================
-        p("Kids Oxford School Shirt",      "kids-oxford-school-shirt",       "SKU-K-SHT-001", "assets/images/pro_k_shirt_1.png",
+        p("Kids Oxford School Shirt",      "kids-oxford-school-shirt",       "SKU-K-SHT-001", "https://picsum.photos/id/55/600/600",
           195000.0, 156000.0, ProductType.SHIRT, kidsShirts,
           List.of(kidsTag, casualTag), uniqlo,  adminStaff, customerCust, adminCust, false);
 
-        p("Floral Print Kids Shirt",       "floral-print-kids-shirt",        "SKU-K-SHT-002", "assets/images/pro_k_shirt_2.png",
+        p("Floral Print Kids Shirt",       "floral-print-kids-shirt",        "SKU-K-SHT-002", "https://picsum.photos/id/56/600/600",
           210000.0, 168000.0, ProductType.SHIRT, kidsShirts,
           List.of(kidsTag, newTag),    zara,    adminStaff, customerCust, adminCust, false);
 
-        p("Plaid Check Kids Shirt",        "plaid-check-kids-shirt",         "SKU-K-SHT-003", "assets/images/pro_k_shirt_3.png",
+        p("Plaid Check Kids Shirt",        "plaid-check-kids-shirt",         "SKU-K-SHT-003", "https://picsum.photos/id/57/600/600",
           185000.0, 148000.0, ProductType.SHIRT, kidsShirts,
           List.of(kidsTag, saleTag),   hm,      adminStaff, customerCust, adminCust, false);
 
-        p("Button Up Poplin Kids Shirt",   "button-up-poplin-kids-shirt",    "SKU-K-SHT-004", "assets/images/pro_k_shirt_4.png",
+        p("Button Up Poplin Kids Shirt",   "button-up-poplin-kids-shirt",    "SKU-K-SHT-004", "https://picsum.photos/id/58/600/600",
           220000.0, 176000.0, ProductType.SHIRT, kidsShirts,
           List.of(kidsTag, trendTag),  gap,     adminStaff, customerCust, adminCust, false);
 
-        p("Polo Kids Shirt",               "polo-kids-shirt",                "SKU-K-SHT-005", "assets/images/pro_k_shirt_5.png",
+        p("Polo Kids Shirt",               "polo-kids-shirt",                "SKU-K-SHT-005", "https://picsum.photos/id/59/600/600",
           240000.0, 192000.0, ProductType.SHIRT, kidsShirts,
           List.of(kidsTag, premiumTag),uniqlo,  adminStaff, customerCust, adminCust, false);
 
         // ============================================================
         // ---- KIDS > KNITWEAR (5 sản phẩm) ----
         // ============================================================
-        p("Kids Rainbow Knit Sweater",     "kids-rainbow-knit-sweater",      "SKU-K-KNT-001", "assets/images/pro_k_knit_1.png",
+        p("Kids Rainbow Knit Sweater",     "kids-rainbow-knit-sweater",      "SKU-K-KNT-001", "https://picsum.photos/id/60/600/600",
           280000.0, 224000.0, ProductType.TSHIRT, kidsKnit,
           List.of(kidsTag, newTag),    hm,      adminStaff, customerCust, adminCust, false);
 
-        p("Teddy Bear Cable Knit",         "teddy-bear-cable-knit",          "SKU-K-KNT-002", "assets/images/pro_k_knit_2.png",
+        p("Teddy Bear Cable Knit",         "teddy-bear-cable-knit",          "SKU-K-KNT-002", "https://picsum.photos/id/61/600/600",
           320000.0, 256000.0, ProductType.TSHIRT, kidsKnit,
           List.of(kidsTag, trendTag),  zara,    adminStaff, customerCust, adminCust, false);
 
-        p("Kids Chunky Cardigan",          "kids-chunky-cardigan",           "SKU-K-KNT-003", "assets/images/pro_k_knit_3.png",
+        p("Kids Chunky Cardigan",          "kids-chunky-cardigan",           "SKU-K-KNT-003", "https://picsum.photos/id/62/600/600",
           260000.0, 208000.0, ProductType.TSHIRT, kidsKnit,
           List.of(kidsTag, saleTag),   gap,     adminStaff, customerCust, adminCust, false);
 
-        p("Star Print Kids Pullover",      "star-print-kids-pullover",       "SKU-K-KNT-004", "assets/images/pro_k_knit_4.png",
+        p("Star Print Kids Pullover",      "star-print-kids-pullover",       "SKU-K-KNT-004", "https://picsum.photos/id/63/600/600",
           295000.0, 236000.0, ProductType.TSHIRT, kidsKnit,
           List.of(kidsTag, casualTag), uniqlo,  adminStaff, customerCust, adminCust, false);
 
-        p("Animal Pattern Knit Kids",      "animal-pattern-knit-kids",       "SKU-K-KNT-005", "assets/images/pro_k_knit_5.png",
+        p("Animal Pattern Knit Kids",      "animal-pattern-knit-kids",       "SKU-K-KNT-005", "https://picsum.photos/id/64/600/600",
           310000.0, 248000.0, ProductType.TSHIRT, kidsKnit,
           List.of(kidsTag, newTag),    hm,      adminStaff, customerCust, adminCust, false);
 
         // ============================================================
         // ---- KIDS > HOODIES (5 sản phẩm) ----
         // ============================================================
-        p("Superhero Kids Hoodie",         "superhero-kids-hoodie",          "SKU-K-HOD-001", "assets/images/pro_k_hoodie_1.png",
+        p("Superhero Kids Hoodie",         "superhero-kids-hoodie",          "SKU-K-HOD-001", "https://picsum.photos/id/65/600/600",
           295000.0, 236000.0, ProductType.HOODIE, kidsHoodies,
           List.of(kidsTag, newTag),    nike,    adminStaff, customerCust, adminCust, false);
 
-        p("Pastel Zip-Up Kids Hoodie",     "pastel-zip-up-kids-hoodie",      "SKU-K-HOD-002", "assets/images/pro_k_hoodie_2.png",
+        p("Pastel Zip-Up Kids Hoodie",     "pastel-zip-up-kids-hoodie",      "SKU-K-HOD-002", "https://picsum.photos/id/66/600/600",
           270000.0, 216000.0, ProductType.HOODIE, kidsHoodies,
           List.of(kidsTag, trendTag),  adidas,  adminStaff, customerCust, adminCust, false);
 
-        p("Fuzzy Bear Ear Hoodie",         "fuzzy-bear-ear-hoodie",          "SKU-K-HOD-003", "assets/images/pro_k_hoodie_3.png",
+        p("Fuzzy Bear Ear Hoodie",         "fuzzy-bear-ear-hoodie",          "SKU-K-HOD-003", "https://picsum.photos/id/67/600/600",
           340000.0, 272000.0, ProductType.HOODIE, kidsHoodies,
           List.of(kidsTag, saleTag),   zara,    adminStaff, customerCust, adminCust, false);
 
-        p("Dino Tail Hoodie Kids",         "dino-tail-hoodie-kids",          "SKU-K-HOD-004", "assets/images/pro_k_hoodie_4.png",
+        p("Dino Tail Hoodie Kids",         "dino-tail-hoodie-kids",          "SKU-K-HOD-004", "https://picsum.photos/id/68/600/600",
           315000.0, 252000.0, ProductType.HOODIE, kidsHoodies,
           List.of(kidsTag, casualTag), gap,     adminStaff, customerCust, adminCust, false);
 
-        p("Sport Active Kids Hoodie",      "sport-active-kids-hoodie",       "SKU-K-HOD-005", "assets/images/pro_k_hoodie_5.png",
+        p("Sport Active Kids Hoodie",      "sport-active-kids-hoodie",       "SKU-K-HOD-005", "https://picsum.photos/id/69/600/600",
           280000.0, 224000.0, ProductType.HOODIE, kidsHoodies,
           List.of(kidsTag, sportTag),  puma,    adminStaff, customerCust, adminCust, false);
 
         // ============================================================
         // ---- KIDS > SHOES (5 sản phẩm) ----
         // ============================================================
-        p("Kids Velcro Sport Sneakers",    "kids-velcro-sport-sneakers",     "SKU-K-SHO-001", "assets/images/pro_k_shoe_1.png",
+        p("Kids Velcro Sport Sneakers",    "kids-velcro-sport-sneakers",     "SKU-K-SHO-001", "https://picsum.photos/id/70/600/600",
           350000.0, 280000.0, ProductType.SNEAKER, kidsShoes,
           List.of(kidsTag, saleTag),   nike,    adminStaff, customerCust, adminCust, true);
 
-        p("Light-Up LED Sneakers Kids",    "light-up-led-sneakers-kids",     "SKU-K-SHO-002", "assets/images/pro_k_shoe_2.png",
+        p("Light-Up LED Sneakers Kids",    "light-up-led-sneakers-kids",     "SKU-K-SHO-002", "https://picsum.photos/id/71/600/600",
           390000.0, 312000.0, ProductType.SNEAKER, kidsShoes,
           List.of(kidsTag, newTag),    adidas,  adminStaff, customerCust, adminCust, true);
 
-        p("Kids Slip-On Canvas Shoes",     "kids-slip-on-canvas-shoes",      "SKU-K-SHO-003", "assets/images/pro_k_shoe_3.png",
+        p("Kids Slip-On Canvas Shoes",     "kids-slip-on-canvas-shoes",      "SKU-K-SHO-003", "https://picsum.photos/id/72/600/600",
           270000.0, 216000.0, ProductType.SNEAKER, kidsShoes,
           List.of(kidsTag, casualTag), uniqlo,  adminStaff, customerCust, adminCust, true);
 
-        p("Cartoon Printed Kids Runners",  "cartoon-printed-kids-runners",   "SKU-K-SHO-004", "assets/images/pro_k_shoe_4.png",
+        p("Cartoon Printed Kids Runners",  "cartoon-printed-kids-runners",   "SKU-K-SHO-004", "https://picsum.photos/id/73/600/600",
           310000.0, 248000.0, ProductType.SNEAKER, kidsShoes,
           List.of(kidsTag, trendTag),  puma,    adminStaff, customerCust, adminCust, true);
 
-        p("Kids School Leather Shoes",     "kids-school-leather-shoes",      "SKU-K-SHO-005", "assets/images/pro_k_shoe_5.png",
+        p("Kids School Leather Shoes",     "kids-school-leather-shoes",      "SKU-K-SHO-005", "https://picsum.photos/id/74/600/600",
           420000.0, 336000.0, ProductType.SNEAKER, kidsShoes,
           List.of(kidsTag, premiumTag),zara,    adminStaff, customerCust, adminCust, true);
 
         // ============================================================
         // ---- KIDS > JEANS (5 sản phẩm) ----
         // ============================================================
-        p("Slim Fit Kids Jeans",           "slim-fit-kids-jeans",            "SKU-K-JNS-001", "assets/images/pro_k_jean_1.png",
+        p("Slim Fit Kids Jeans",           "slim-fit-kids-jeans",            "SKU-K-JNS-001", "https://picsum.photos/id/75/600/600",
           280000.0, 224000.0, ProductType.JEANS, kidsJeans,
           List.of(kidsTag, trendTag),  levis,   adminStaff, customerCust, adminCust, false);
 
-        p("Elastic Waist Kids Jeans",      "elastic-waist-kids-jeans",       "SKU-K-JNS-002", "assets/images/pro_k_jean_2.png",
+        p("Elastic Waist Kids Jeans",      "elastic-waist-kids-jeans",       "SKU-K-JNS-002", "https://picsum.photos/id/76/600/600",
           250000.0, 200000.0, ProductType.JEANS, kidsJeans,
           List.of(kidsTag, casualTag), hm,      adminStaff, customerCust, adminCust, false);
 
-        p("Knee Patch Denim Kids",         "knee-patch-denim-kids",          "SKU-K-JNS-003", "assets/images/pro_k_jean_3.png",
+        p("Knee Patch Denim Kids",         "knee-patch-denim-kids",          "SKU-K-JNS-003", "https://picsum.photos/id/77/600/600",
           260000.0, 208000.0, ProductType.JEANS, kidsJeans,
           List.of(kidsTag, newTag),    zara,    adminStaff, customerCust, adminCust, false);
 
-        p("Adjustable Waist Jeans Kids",   "adjustable-waist-jeans-kids",    "SKU-K-JNS-004", "assets/images/pro_k_jean_4.png",
+        p("Adjustable Waist Jeans Kids",   "adjustable-waist-jeans-kids",    "SKU-K-JNS-004", "https://picsum.photos/id/78/600/600",
           295000.0, 236000.0, ProductType.JEANS, kidsJeans,
           List.of(kidsTag, saleTag),   gap,     adminStaff, customerCust, adminCust, false);
 
-        p("Wide Leg Kids Jeans",           "wide-leg-kids-jeans",            "SKU-K-JNS-005", "assets/images/pro_k_jean_5.png",
+        p("Wide Leg Kids Jeans",           "wide-leg-kids-jeans",            "SKU-K-JNS-005", "https://picsum.photos/id/79/600/600",
           310000.0, 248000.0, ProductType.JEANS, kidsJeans,
           List.of(kidsTag, trendTag),  levis,   adminStaff, customerCust, adminCust, false);
 

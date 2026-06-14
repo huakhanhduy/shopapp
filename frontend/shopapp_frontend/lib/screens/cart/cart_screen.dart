@@ -240,7 +240,7 @@ class _CartScreenState extends State<CartScreen> {
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 16),
-                        height: 120,
+                        height: 130,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
@@ -261,7 +261,7 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                               child: SizedBox(
                                 width: 100,
-                                height: 120,
+                                height: 130,
                                 child: item.product.imageUrl.startsWith("assets")
                                     ? Image.asset(item.product.imageUrl, fit: BoxFit.cover)
                                     : Image.network(item.product.imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: Colors.grey[200])),
@@ -270,7 +270,7 @@ class _CartScreenState extends State<CartScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -289,9 +289,16 @@ class _CartScreenState extends State<CartScreen> {
                                             ),
                                           ),
                                         ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete_outline, color: Colors.grey),
-                                          onPressed: () => cartProvider.removeFromCart(index),
+                                        Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: () => cartProvider.removeFromCart(index),
+                                            child: const Padding(
+                                              padding: EdgeInsets.all(6.0),
+                                              child: Icon(Icons.delete_outline, color: Colors.grey),
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -306,17 +313,27 @@ class _CartScreenState extends State<CartScreen> {
                                       children: [
                                         Row(
                                           children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.remove_circle_outline),
-                                              onPressed: () => cartProvider.decrementQuantity(index),
+                                            GestureDetector(
+                                              behavior: HitTestBehavior.opaque,
+                                              onTap: () => cartProvider.decrementQuantity(index),
+                                              child: const Padding(
+                                                padding: EdgeInsets.all(6.0),
+                                                child: Icon(Icons.remove_circle_outline, size: 22),
+                                              ),
                                             ),
+                                            const SizedBox(width: 8),
                                             Text(
                                               "${item.quantity}",
                                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                             ),
-                                            IconButton(
-                                              icon: const Icon(Icons.add_circle_outline),
-                                              onPressed: () => cartProvider.incrementQuantity(index),
+                                            const SizedBox(width: 8),
+                                            GestureDetector(
+                                              behavior: HitTestBehavior.opaque,
+                                              onTap: () => cartProvider.incrementQuantity(index),
+                                              child: const Padding(
+                                                padding: EdgeInsets.all(6.0),
+                                                child: Icon(Icons.add_circle_outline, size: 22),
+                                              ),
                                             ),
                                           ],
                                         ),
