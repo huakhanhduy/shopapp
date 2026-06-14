@@ -66,5 +66,26 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb853720010568020</string>
+				<string>com.googleusercontent.apps.803658319002-54q9s6jqnh5hatlm00b002180n3t80j3</string>
+			</array>
+		</dict>
+	</array>
+	<key>FacebookAppID</key>
+	<string>853720010568020</string>
+	<key>FacebookClientToken</key>
+	<string>c042b73f5da809e7652ef463db2847b6</string>
+	<key>FacebookDisplayName</key>
+	<string>ShopApp</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fb-messenger-share-api</string>
+	</array>
 </dict>
 </plist>
