@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../../providers/auth_provider.dart';
 import '../main_screen.dart';
 
@@ -65,22 +67,69 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _socialRegister(String provider) async {
     try {
-      await Provider.of<AuthProvider>(context, listen: false).socialLogin(
-        email: "social.user@gmail.com",
+      String email = "";
+      String providerId = "";
+      String firstName = "";
+      String lastName = "";
+
+      if (provider == "google") {
+        final GoogleSignIn googleSignIn = GoogleSignIn(
+          scopes: ['email', 'profile'],
+          clientId: '803658319002-54q9s6jqnh5hatlm00b002180n3t80j3.apps.googleusercontent.com',
+        );
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) return; // User cancelled
+        
+        email = googleUser.email;
+        providerId = googleUser.id;
+        final String displayName = googleUser.displayName ?? "";
+        final parts = displayName.split(" ");
+        firstName = parts.isNotEmpty ? parts.first : "Google";
+        lastName = parts.length > 1 ? parts.sublist(1).join(" ") : "User";
+      } else if (provider == "facebook") {
+        final LoginResult result = await FacebookAuth.instance.login(
+          permissions: ['public_profile', 'email'],
+        );
+        if (result.status == LoginStatus.success) {
+          final userData = await FacebookAuth.instance.getUserData();
+          email = userData['email'] ?? "${userData['id']}@facebook.com";
+          providerId = userData['id'] ?? "";
+          final String name = userData['name'] ?? "";
+          final parts = name.split(" ");
+          firstName = parts.isNotEmpty ? parts.first : "Facebook";
+          lastName = parts.length > 1 ? parts.sublist(1).join(" ") : "User";
+        } else if (result.status == LoginStatus.cancelled) {
+          return;
+        } else {
+          throw Exception(result.message ?? "Đăng ký Facebook thất bại");
+        }
+      } else {
+        throw Exception("Provider không hỗ trợ");
+      }
+
+      if (email.isEmpty || providerId.isEmpty) {
+        throw Exception("Không thể lấy thông tin tài khoản");
+      }
+
+      await Provider.of<AuthProvider>(context, listen: false).socialRegister(
+        email: email,
         provider: provider,
-        providerId: "social_${provider}_123",
-        firstName: "Social",
-        lastName: provider.toUpperCase(),
+        providerId: providerId,
+        firstName: firstName,
+        lastName: lastName,
       );
+      
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Đăng ký thành công, vui lòng đăng nhập")),
       );
+      
+      Navigator.pop(context); // Go back to login screen
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(e.toString().replaceAll("Exception: ", ""))),
       );
     }
   }

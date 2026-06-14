@@ -47,4 +47,16 @@ public class AuthController {
                 return ResponseEntity.ok(
                                 authService.socialLogin(email, provider, providerId, firstName, lastName));
         }
+
+        @PostMapping("/social-register")
+        public ResponseEntity<AuthResponse> socialRegister(
+                        @RequestBody java.util.Map<String, String> payload) {
+                String email = payload.get("email");
+                String provider = payload.get("provider");
+                String providerId = payload.get("providerId");
+                String firstName = payload.get("firstName");
+                String lastName = payload.get("lastName");
+                return ResponseEntity.ok(
+                                authService.socialRegister(email, provider, providerId, firstName, lastName));
+        }
 }

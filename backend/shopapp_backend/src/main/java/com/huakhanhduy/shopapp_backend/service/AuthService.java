@@ -12,4 +12,6 @@ public interface AuthService {
 
     AuthResponse socialLogin(String email, String provider, String providerId, String firstName, String lastName);
 
+    AuthResponse socialRegister(String email, String provider, String providerId, String firstName, String lastName);
+
 }

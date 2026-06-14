@@ -71,7 +71,35 @@ class AuthService {
       final data = jsonDecode(response.body);
       return data["token"];
     }
-    throw Exception("Đăng nhập bằng mạng xã hội thất bại");
+    final errorMsg = jsonDecode(response.body)["message"] ?? "Đăng nhập bằng mạng xã hội thất bại";
+    throw Exception(errorMsg);
+  }
+
+  Future<String> socialRegister({
+    required String email,
+    required String provider,
+    required String providerId,
+    required String firstName,
+    required String lastName,
+  }) async {
+    final response = await http.post(
+      Uri.parse("${ApiConstants.baseUrl}/api/auth/social-register"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": email,
+        "provider": provider,
+        "providerId": providerId,
+        "firstName": firstName,
+        "lastName": lastName,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["token"];
+    }
+    final errorMsg = jsonDecode(response.body)["message"] ?? "Đăng ký bằng mạng xã hội thất bại";
+    throw Exception(errorMsg);
   }
 
   Future<Map<String, dynamic>> getProfile() async {

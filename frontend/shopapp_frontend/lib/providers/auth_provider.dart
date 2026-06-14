@@ -133,6 +133,29 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> socialRegister({
+    required String email,
+    required String provider,
+    required String providerId,
+    required String firstName,
+    required String lastName,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _authService.socialRegister(
+        email: email,
+        provider: provider,
+        providerId: providerId,
+        firstName: firstName,
+        lastName: lastName,
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> logout() async {
     await TokenStorage.clear();
     _token = null;

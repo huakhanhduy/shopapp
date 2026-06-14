@@ -50,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse register(RegisterRequest request) {
 
         if (staffAccountRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new RuntimeException("Tài khoản đã tồn tại");
         }
 
         Role userRole = roleRepository
@@ -92,22 +92,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
+        java.util.Optional<StaffAccount> accountOpt = staffAccountRepository.findByEmail(request.getEmail());
+        if (accountOpt.isEmpty()) {
+            throw new RuntimeException("Email không tồn tại");
+        }
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            throw new RuntimeException("Mật khẩu không chính xác");
+        }
 
-        StaffAccount account =
-                staffAccountRepository
-                        .findByEmail(request.getEmail())
-                        .orElseThrow();
-
-        String token =
-                jwtService.generateToken(account);
-
+        StaffAccount account = accountOpt.get();
+        String token = jwtService.generateToken(account);
         return new AuthResponse(token);
     }
 
@@ -115,22 +117,41 @@ public class AuthServiceImpl implements AuthService {
     @org.springframework.transaction.annotation.Transactional
     public AuthResponse socialLogin(String email, String provider, String providerId, String firstName, String lastName) {
         java.util.Optional<StaffAccount> existing = staffAccountRepository.findByEmail(email);
-        StaffAccount account;
-        if (existing.isPresent()) {
-            account = existing.get();
-        } else {
-            Role userRole = roleRepository.findByRoleName("ROLE_USER")
-                    .orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
-
-            StaffAccount newAccount = new StaffAccount();
-            newAccount.setEmail(email);
-            newAccount.setFirstName(firstName != null && !firstName.isEmpty() ? firstName : "User");
-            newAccount.setLastName(lastName != null && !lastName.isEmpty() ? lastName : "Social");
-            newAccount.setPasswordHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
-            newAccount.setRole(userRole);
-            newAccount.setActive(true);
-            account = staffAccountRepository.save(newAccount);
+        if (existing.isEmpty()) {
+            throw new RuntimeException("Tài khoản chưa tồn tại, vui lòng đăng ký");
         }
+        StaffAccount account = existing.get();
+
+        if (socialAccountRepository.findByProviderAndProviderId(provider, providerId).isEmpty()) {
+            SocialAccount socialAccount = new SocialAccount();
+            socialAccount.setProvider(provider);
+            socialAccount.setProviderId(providerId);
+            socialAccount.setUser(account);
+            socialAccountRepository.save(socialAccount);
+        }
+
+        String token = jwtService.generateToken(account);
+        return new AuthResponse(token);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public AuthResponse socialRegister(String email, String provider, String providerId, String firstName, String lastName) {
+        if (staffAccountRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Tài khoản đã tồn tại");
+        }
+
+        Role userRole = roleRepository.findByRoleName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
+
+        StaffAccount newAccount = new StaffAccount();
+        newAccount.setEmail(email);
+        newAccount.setFirstName(firstName != null && !firstName.isEmpty() ? firstName : "User");
+        newAccount.setLastName(lastName != null && !lastName.isEmpty() ? lastName : "Social");
+        newAccount.setPasswordHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
+        newAccount.setRole(userRole);
+        newAccount.setActive(true);
+        StaffAccount account = staffAccountRepository.save(newAccount);
 
         if (customerRepository.findByEmail(email).isEmpty()) {
             com.huakhanhduy.shopapp_backend.entity.Customer customer = new com.huakhanhduy.shopapp_backend.entity.Customer();
@@ -142,13 +163,11 @@ public class AuthServiceImpl implements AuthService {
             customerRepository.save(customer);
         }
 
-        if (socialAccountRepository.findByProviderAndProviderId(provider, providerId).isEmpty()) {
-            SocialAccount socialAccount = new SocialAccount();
-            socialAccount.setProvider(provider);
-            socialAccount.setProviderId(providerId);
-            socialAccount.setUser(account);
-            socialAccountRepository.save(socialAccount);
-        }
+        SocialAccount socialAccount = new SocialAccount();
+        socialAccount.setProvider(provider);
+        socialAccount.setProviderId(providerId);
+        socialAccount.setUser(account);
+        socialAccountRepository.save(socialAccount);
 
         String token = jwtService.generateToken(account);
         return new AuthResponse(token);
