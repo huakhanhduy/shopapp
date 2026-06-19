@@ -53,7 +53,7 @@ public class HomeServiceImpl implements HomeService {
                                 "Super summer sale");
 
                 HomeSectionResponse newSection = buildSection(
-                                "Mới Về",
+                                "New Arrival",
                                 "You've never seen it before");
 
                 HomeSectionResponse trendSection = buildSection(

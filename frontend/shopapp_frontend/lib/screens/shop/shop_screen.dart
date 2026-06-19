@@ -175,9 +175,9 @@ class _ShopScreenState extends State<ShopScreen>
           labelColor: Colors.black,
           unselectedLabelColor: Colors.black54,
           tabs: const [
-            Tab(text: "Women"),
-            Tab(text: "Men"),
-            Tab(text: "Kids"),
+            Tab(text: "Clothing"),
+            Tab(text: "Shoes"),
+            Tab(text: "Accessories"),
           ],
         ),
       ),
@@ -198,9 +198,9 @@ class _ShopScreenState extends State<ShopScreen>
           return TabBarView(
             controller: _tabController,
             children: [
-              _buildCategoryList(categories, "Women"),
-              _buildCategoryList(categories, "Men"),
-              _buildCategoryList(categories, "Kids"),
+              _buildCategoryList(categories, "Clothing"),
+              _buildCategoryList(categories, "Shoes"),
+              _buildCategoryList(categories, "Accessories"),
             ],
           );
         },

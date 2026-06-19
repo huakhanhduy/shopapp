@@ -11,3 +11,11 @@ Thumbs.db
 
 # Log files
 *.log
+
+# Tunnel configuration files
+ngrok.txt
+pinggy.txt
+serveo.txt
+frontend/shopapp_frontend/localtunnel.txt
+frontend/shopapp_frontend/localtunnel_new.txt
+

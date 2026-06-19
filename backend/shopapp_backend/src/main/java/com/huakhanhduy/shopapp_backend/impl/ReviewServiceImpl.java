@@ -121,4 +121,9 @@ public class ReviewServiceImpl implements ReviewService {
 
         return reviewRepository.save(review);
     }
+
+    @Override
+    public List<Review> getReviewsByCustomerEmail(String customerEmail) {
+        return reviewRepository.findByCustomerEmailOrderByCreatedAtDesc(customerEmail);
+    }
 }

@@ -41,7 +41,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
     {"name": "Beige", "color": const Color(0xffE2C09C)},
     {"name": "Navy", "color": const Color(0xff1A237E)},
   ];
-  final List<String> _categories = ["All", "Women", "Men", "Boys", "Girls"];
+  final List<String> _categories = ["All", "Clothing", "Shoes", "Accessories"];
 
   @override
   void initState() {
@@ -55,7 +55,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
   }
 
   void _showBrandSelectionSheet() {
-    final brands = ["LIME", "Mango", "Olivier", "&Berries", "Nike", "Zara", "Adidas", "H&M", "Gucci", "Uniqlo"];
+    final brands = ["Coolmate", "DirtyCoins", "Yody", "Levi's", "Routine", "Nike", "Adidas", "Puma"];
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,

@@ -217,9 +217,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        "ShopApp Brand",
-                        style: TextStyle(
+                      Text(
+                        widget.product.brand,
+                        style: const TextStyle(
                           fontSize: 13,
                           color: Colors.grey,
                           fontWeight: FontWeight.w500,
@@ -489,6 +489,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
+                                    Text(
+                                      item.brand,
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
                                     Text(
                                       item.productName,
                                       maxLines: 1,

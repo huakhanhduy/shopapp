@@ -22,9 +22,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _submitting = false;
 
   final Map<String, double> _shippingFees = {
-    "FedEx": 30000,
-    "USPS": 15000,
-    "DHL": 50000,
+    "FedEx": 15000,
+    "USPS": 10000,
+    "DHL": 20000,
   };
 
   @override
@@ -63,14 +63,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     if (cartProvider.selectedAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng chọn địa chỉ giao hàng")),
+        const SnackBar(content: Text("Please select a shipping address")),
       );
       return;
     }
 
     if (cartProvider.selectedPaymentCard == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng chọn phương thức thanh toán")),
+        const SnackBar(content: Text("Please select a payment method")),
       );
       return;
     }
@@ -82,7 +82,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final addr = cartProvider.selectedAddress!;
     final card = cartProvider.selectedPaymentCard!;
 
-    final addressStr = "${addr["fullName"]}, SĐT: ${addr["phoneNumber"]}, ${addr["streetAddress"]}, ${addr["city"]}, ${addr["state"]}, ${addr["country"]}";
+    final addressStr = "${addr["fullName"]}, Phone: ${addr["phoneNumber"]}, ${addr["streetAddress"]}, ${addr["city"]}, ${addr["state"]}, ${addr["country"]}";
     final paymentStr = "${card["cardType"]} (${card["cardNumber"].toString().substring(card["cardNumber"].toString().length - 4)})";
 
     final itemsRequest = cartProvider.items.map((item) {
@@ -103,9 +103,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       "shippingMethod": cartProvider.selectedShippingMethod,
       "paymentMethod": paymentStr,
       "subtotal": cartProvider.subtotal,
-      "deliveryFee": _shippingFees[cartProvider.selectedShippingMethod] ?? 30000,
+      "deliveryFee": _shippingFees[cartProvider.selectedShippingMethod] ?? 15000,
       "discountAmount": cartProvider.discountAmount,
-      "totalAmount": cartProvider.subtotal + (_shippingFees[cartProvider.selectedShippingMethod] ?? 30000) - cartProvider.discountAmount,
+      "totalAmount": cartProvider.subtotal + (_shippingFees[cartProvider.selectedShippingMethod] ?? 15000) - cartProvider.discountAmount,
     };
 
     try {
@@ -119,7 +119,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Lỗi đặt hàng: $e")),
+          SnackBar(content: Text("Order failed: $e")),
         );
       }
     } finally {
@@ -131,12 +131,113 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
+  Widget _buildCardLogo(String? cardType) {
+    final type = cardType?.toLowerCase() ?? "";
+    if (type == "mastercard") {
+      return SizedBox(
+        width: 32,
+        height: 20,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: const BoxDecoration(
+                  color: Color(0xffEB001B),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 12,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: const Color(0xffF79E1B).withOpacity(0.85),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (type == "visa") {
+      return const Text(
+        "VISA",
+        style: TextStyle(
+          color: Color(0xff1A1F71),
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    } else {
+      return const Icon(Icons.credit_card, color: Colors.grey);
+    }
+  }
+
+  Widget _buildDeliveryLogo(String method) {
+    if (method == "FedEx") {
+      return const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "Fed",
+            style: TextStyle(
+              color: Color(0xff4D148C),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
+          Text(
+            "Ex",
+            style: TextStyle(
+              color: Color(0xffFF6200),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ],
+      );
+    } else if (method == "USPS") {
+      return const Text(
+        "USPS",
+        style: TextStyle(
+          color: Color(0xff003366),
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    } else if (method == "DHL") {
+      return const Text(
+        "DHL",
+        style: TextStyle(
+          color: Color(0xffD00000),
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          fontStyle: FontStyle.italic,
+          letterSpacing: -1,
+        ),
+      );
+    }
+    return Text(
+      method,
+      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     const primaryColor = Color(0xffDB3022);
 
-    double shipFee = _shippingFees[cartProvider.selectedShippingMethod] ?? 30000;
+    double shipFee = _shippingFees[cartProvider.selectedShippingMethod] ?? 15000;
     double orderTotal = cartProvider.subtotal + shipFee - cartProvider.discountAmount;
 
     return Scaffold(
@@ -145,11 +246,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          "Thanh toán",
+          "Checkout",
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -160,116 +261,105 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               children: [
                 CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(primaryColor)),
                 SizedBox(height: 16),
-                Text("Đang xử lý thanh toán...", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text("Processing order...", style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               children: [
-                // Shipping Address Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Địa chỉ giao hàng",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const AddressManagementScreen(selectMode: true)),
-                        );
-                      },
-                      child: const Text("Thay đổi", style: TextStyle(color: primaryColor)),
-                    ),
-                  ],
-                ),
-                // Shipping Address Card
-                _buildAddressCard(cartProvider.selectedAddress),
-                const SizedBox(height: 24),
-
-                // Payment Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Phương thức thanh toán",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const PaymentMethodsScreen(selectMode: true)),
-                        );
-                      },
-                      child: const Text("Thay đổi", style: TextStyle(color: primaryColor)),
-                    ),
-                  ],
-                ),
-                // Payment Card
-                _buildPaymentCard(cartProvider.selectedPaymentCard),
-                const SizedBox(height: 24),
-
-                // Shipping Method Header
+                // Shipping Address Section
                 const Text(
-                  "Phương thức vận chuyển",
+                  "Shipping address",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                _buildAddressCard(cartProvider.selectedAddress),
+                const SizedBox(height: 28),
+
+                // Payment Section
+                const Text(
+                  "Payment",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                _buildPaymentCard(cartProvider.selectedPaymentCard),
+                const SizedBox(height: 28),
+
+                // Delivery Method Section
+                const Text(
+                  "Delivery method",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 _buildShippingMethods(cartProvider),
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
 
-                // Cost summary
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                // Cost Summary
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Đơn hàng", style: TextStyle(color: Colors.black54)),
-                          Text("${cartProvider.subtotal.toInt()}đ", style: const TextStyle(fontWeight: FontWeight.bold)),
+                          const Text(
+                            "Order:",
+                            style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500),
+                          ),
+                          Text(
+                            "${cartProvider.subtotal.toInt()}đ",
+                            style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Vận chuyển", style: TextStyle(color: Colors.black54)),
-                          Text("${shipFee.toInt()}đ", style: const TextStyle(fontWeight: FontWeight.bold)),
+                          const Text(
+                            "Delivery:",
+                            style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500),
+                          ),
+                          Text(
+                            "${shipFee.toInt()}đ",
+                            style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                         ],
                       ),
-                      if (cartProvider.discountPercent > 0) ...[
-                        const SizedBox(height: 8),
+                      if (cartProvider.discountAmount > 0) ...[
+                        const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text("Giảm giá", style: TextStyle(color: Colors.red)),
-                            Text("-${cartProvider.discountAmount.toInt()}đ", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                            const Text(
+                              "Discount:",
+                              style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500),
+                            ),
+                            Text(
+                              "-${cartProvider.discountAmount.toInt()}đ",
+                              style: const TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
                           ],
                         ),
                       ],
-                      const Divider(height: 24),
+                      const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Tổng cộng", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          const Text(
+                            "Summary:",
+                            style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                           Text(
                             "${orderTotal.toInt()}đ",
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor),
+                            style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 32),
                 
                 // Submit order button
                 SizedBox(
@@ -280,11 +370,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: const Text("XÁC NHẬN ĐƠN HÀNG", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: const Text("SUBMIT ORDER", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -294,76 +385,79 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildAddressCard(Map<String, dynamic>? address) {
-    if (address == null) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Text("Chưa chọn địa chỉ giao hàng. Nhấn Thay đổi để thêm/chọn."),
-      );
-    }
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
         ]
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            address["fullName"] ?? "",
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          Expanded(
+            child: address == null
+                ? const Text(
+                    "Please select or add a shipping address",
+                    style: TextStyle(color: Colors.black54, fontSize: 14),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        address["fullName"] ?? "",
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        address["streetAddress"] ?? "",
+                        style: const TextStyle(color: Colors.black87, fontSize: 14, height: 1.3),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${address["city"] ?? ""}, ${address["state"] ?? ""} ${address["zipCode"] ?? ""}, ${address["country"] ?? ""}",
+                        style: const TextStyle(color: Colors.black87, fontSize: 14, height: 1.3),
+                      ),
+                    ],
+                  ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            "${address["streetAddress"]}, ${address["city"]}, ${address["state"]}",
-            style: const TextStyle(color: Colors.black87),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddressManagementScreen(selectMode: true)),
+              ).then((_) => setState(() {}));
+            },
+            child: const Text(
+              "Change",
+              style: TextStyle(
+                color: Color(0xffDB3022),
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
           ),
-          Text(address["country"] ?? ""),
-          const SizedBox(height: 6),
-          Text("SĐT: ${address["phoneNumber"]}", style: const TextStyle(color: Colors.black54)),
         ],
       ),
     );
   }
 
   Widget _buildPaymentCard(Map<String, dynamic>? card) {
-    if (card == null) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Text("Chưa chọn phương thức thanh toán. Nhấn Thay đổi để thêm/chọn."),
-      );
-    }
-
-    final rawNum = card["cardNumber"] ?? "";
-    String displayNum = rawNum;
-    if (rawNum.length > 4) {
-      displayNum = "**** **** **** ${rawNum.substring(rawNum.length - 4)}";
-    }
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -371,33 +465,46 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              card["cardType"].toString().toUpperCase(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),
+          Expanded(
+            child: card == null
+                ? const Text(
+                    "Please select or add a payment method",
+                    style: TextStyle(color: Colors.black54, fontSize: 14),
+                  )
+                : Row(
+                    children: [
+                      _buildCardLogo(card["cardType"]),
+                      const SizedBox(width: 16),
+                      Text(
+                        card["cardNumber"] != null && card["cardNumber"].toString().length > 4
+                            ? "**** **** **** ${card["cardNumber"].toString().substring(card["cardNumber"].toString().length - 4)}"
+                            : "**** **** **** 3947",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PaymentMethodsScreen(selectMode: true)),
+              ).then((_) => setState(() {}));
+            },
+            child: const Text(
+              "Change",
+              style: TextStyle(
+                color: Color(0xffDB3022),
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayNum,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-                Text(
-                  card["cardHolderName"] ?? "",
-                  style: const TextStyle(color: Colors.black54, fontSize: 13),
-                ),
-              ],
-            ),
-          )
         ],
       ),
     );
@@ -406,53 +513,43 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildShippingMethods(CartProvider cartProvider) {
     final methods = ["FedEx", "USPS", "DHL"];
     final deliveryTimes = {
-      "FedEx": "2-3 ngày làm việc",
-      "USPS": "4-6 ngày làm việc",
-      "DHL": "1 ngày (Hỏa tốc)",
+      "FedEx": "2-3 days",
+      "USPS": "2-3 days",
+      "DHL": "2-3 days",
     };
 
     return Row(
       children: methods.map((method) {
         final isSelected = cartProvider.selectedShippingMethod == method;
-        double fee = _shippingFees[method] ?? 30000;
-
         return Expanded(
           child: GestureDetector(
             onTap: () => cartProvider.selectShippingMethod(method),
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              height: 72,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: isSelected ? const Color(0xffDB3022) : Colors.transparent,
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
+                    color: Colors.black.withOpacity(0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
                 ],
               ),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    method,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "${fee.toInt()}đ",
-                    style: const TextStyle(color: Colors.black54, fontSize: 13, fontWeight: FontWeight.bold),
-                  ),
+                  _buildDeliveryLogo(method),
                   const SizedBox(height: 6),
                   Text(
                     deliveryTimes[method]!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.grey, fontSize: 10),
+                    style: const TextStyle(color: Colors.grey, fontSize: 11),
                   ),
                 ],
               ),

@@ -65,4 +65,17 @@ class Product {
       json["quantity"] ?? 10,
     );
   }
+
+  String get brand {
+    final lowerName = productName.toLowerCase();
+    if (lowerName.contains("coolmate")) return "Coolmate";
+    if (lowerName.contains("dirtycoins")) return "DirtyCoins";
+    if (lowerName.contains("yody")) return "Yody";
+    if (lowerName.contains("levis") || lowerName.contains("levi's")) return "Levi's";
+    if (lowerName.contains("routine")) return "Routine";
+    if (lowerName.contains("nike")) return "Nike";
+    if (lowerName.contains("adidas")) return "Adidas";
+    if (lowerName.contains("puma")) return "Puma";
+    return "ShopApp Brand";
+  }
 }

@@ -14,6 +14,8 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     List<Review> findByProductIdAndCustomerEmail(UUID productId, String customerEmail);
 
+    List<Review> findByCustomerEmailOrderByCreatedAtDesc(String customerEmail);
+
     @org.springframework.data.jpa.repository.Query("SELECT r.product.id, AVG(cast(r.rating as double)) FROM Review r GROUP BY r.product.id")
     List<Object[]> getAverageRatings();
 

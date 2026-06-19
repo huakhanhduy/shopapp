@@ -52,9 +52,6 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
 
   Future<Set<String>> _getProductIdsForCategoryName(String catName) async {
     String searchName = catName;
-    if (catName == "Boys" || catName == "Girls") {
-      searchName = "Kids";
-    }
 
     String? targetCatId;
     for (var item in filterItems) {
@@ -173,10 +170,14 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   // Helpers to format prices and match screenshots exactly
   String getBrand(String name) {
     final lowerName = name.toLowerCase();
-    if (lowerName.contains("lime")) return "LIME";
-    if (lowerName.contains("mango") || lowerName.contains("violeta")) return "Mango";
-    if (lowerName.contains("olivier")) return "Olivier";
-    if (lowerName.contains("berries")) return "&Berries";
+    if (lowerName.contains("coolmate")) return "Coolmate";
+    if (lowerName.contains("dirtycoins")) return "DirtyCoins";
+    if (lowerName.contains("yody")) return "Yody";
+    if (lowerName.contains("levis") || lowerName.contains("levi's")) return "Levi's";
+    if (lowerName.contains("routine")) return "Routine";
+    if (lowerName.contains("nike")) return "Nike";
+    if (lowerName.contains("adidas")) return "Adidas";
+    if (lowerName.contains("puma")) return "Puma";
     return "ShopApp Brand";
   }
 
@@ -185,25 +186,22 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
     if (brand != "ShopApp Brand" && name.startsWith(brand)) {
       return name.substring(brand.length).trim();
     }
-    if (name.toLowerCase().contains("longsleeve violeta")) {
-      return "Longsleeve Violeta";
-    }
     return name;
   }
 
   String getColorText(Product p) {
     final name = p.productName.toLowerCase();
-    if (name.contains("lime")) return "Blue";
-    if (name.contains("violeta")) return "Orange";
-    if (name.contains("olivier")) return "Gray";
-    if (name.contains("berries")) return "Black";
+    if (name.contains("white")) return "White";
+    if (name.contains("black")) return "Black";
+    if (name.contains("blue")) return "Blue";
+    if (name.contains("gray")) return "Gray";
+    if (name.contains("khaki")) return "Khaki";
+    if (name.contains("silver")) return "Silver";
     return "Black";
   }
 
   String getSizeText(Product p) {
-    final name = p.productName.toLowerCase();
-    if (name.contains("lime") || name.contains("olivier")) return "L";
-    return "S";
+    return "M";
   }
 
   bool isProductSoldOut(Product p) {

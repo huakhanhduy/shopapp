@@ -18,7 +18,8 @@ class AuthService {
       final data = jsonDecode(response.body);
       return data["token"];
     }
-    throw Exception("Đăng nhập thất bại");
+    final errorMsg = jsonDecode(response.body)["message"] ?? "Đăng nhập thất bại";
+    throw Exception(errorMsg);
   }
 
   Future<String> register({

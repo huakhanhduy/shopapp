@@ -63,4 +63,25 @@ class ReviewService {
 
     return Review.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
   }
+
+  Future<List<Review>> getMyReviews() async {
+    final token = await TokenStorage.getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception("You must be logged in to load reviews");
+    }
+
+    final response = await http.get(
+      Uri.parse("${ApiConstants.baseUrl}/api/products/reviews/me"),
+      headers: {
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Cannot load your reviews");
+    }
+
+    final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+    return data.map((json) => Review.fromJson(json)).toList();
+  }
 }

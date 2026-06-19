@@ -4,7 +4,7 @@ import '../../providers/cart_provider.dart';
 import '../../services/address_service.dart';
 
 class AddressManagementScreen extends StatefulWidget {
-  final bool selectMode; // If true, tapping an address selects it and pops
+  final bool selectMode;
 
   const AddressManagementScreen({
     super.key,
@@ -20,17 +20,16 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
   List<Map<String, dynamic>> _addresses = [];
   bool _loading = false;
   bool _showAddForm = false;
+  String? _editingAddressId;
 
   // Form Controllers
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _streetController = TextEditingController();
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _zipController = TextEditingController();
   final _countryController = TextEditingController();
-  bool _isDefaultAddress = false;
 
   @override
   void initState() {
@@ -41,7 +40,6 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _phoneController.dispose();
     _streetController.dispose();
     _cityController.dispose();
     _stateController.dispose();
@@ -60,13 +58,17 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
         _addresses = data;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi tải địa chỉ: $e")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to load addresses: $e")),
+        );
+      }
     } finally {
-      setState(() {
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -79,135 +81,194 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
 
     final request = {
       "fullName": _nameController.text.trim(),
-      "phoneNumber": _phoneController.text.trim(),
+      "phoneNumber": "123456789", // Default dummy phone required by backend
       "streetAddress": _streetController.text.trim(),
       "city": _cityController.text.trim(),
       "state": _stateController.text.trim(),
       "zipCode": _zipController.text.trim(),
       "country": _countryController.text.trim(),
-      "isDefault": _isDefaultAddress,
+      "isDefault": _editingAddressId == null ? _addresses.isEmpty : false, // Default if first address
     };
 
     try {
-      await _addressService.createAddress(request);
+      if (_editingAddressId != null) {
+        await _addressService.updateAddress(_editingAddressId!, request);
+      } else {
+        await _addressService.createAddress(request);
+      }
       setState(() {
         _showAddForm = false;
-        // Reset form
+        _editingAddressId = null;
         _nameController.clear();
-        _phoneController.clear();
         _streetController.clear();
         _cityController.clear();
         _stateController.clear();
         _zipController.clear();
         _countryController.clear();
-        _isDefaultAddress = false;
       });
       _fetchAddresses();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi lưu địa chỉ: $e")),
-      );
-      setState(() {
-        _loading = false;
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to save address: $e")),
+        );
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 
   void _deleteAddress(String id) async {
+    setState(() {
+      _loading = true;
+    });
     try {
       await _addressService.deleteAddress(id);
       _fetchAddresses();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi xóa địa chỉ: $e")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to delete address: $e")),
+        );
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 
-  void _setDefault(String id) async {
+  void _setDefaultAndSelect(Map<String, dynamic> address) async {
+    final id = address["id"] as String;
+    setState(() {
+      _loading = true;
+    });
     try {
       await _addressService.setDefaultAddress(id);
+      if (widget.selectMode && mounted) {
+        Provider.of<CartProvider>(context, listen: false).selectAddress(address);
+      }
       _fetchAddresses();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi cài đặt mặc định: $e")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to set address: $e")),
+        );
+        setState(() {
+          _loading = false;
+        });
+      }
     }
+  }
+
+  void _startEdit(Map<String, dynamic> address) {
+    setState(() {
+      _editingAddressId = address["id"];
+      _nameController.text = address["fullName"] ?? "";
+      _streetController.text = address["streetAddress"] ?? "";
+      _cityController.text = address["city"] ?? "";
+      _stateController.text = address["state"] ?? "";
+      _zipController.text = address["zipCode"] ?? "";
+      _countryController.text = address["country"] ?? "";
+      _showAddForm = true;
+    });
+  }
+
+  void _startAdd() {
+    setState(() {
+      _editingAddressId = null;
+      _nameController.clear();
+      _streetController.clear();
+      _cityController.clear();
+      _stateController.clear();
+      _zipController.clear();
+      _countryController.clear();
+      _showAddForm = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xffDB3022);
-
     return Scaffold(
       backgroundColor: const Color(0xffF9F9F9),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          onPressed: () {
+            if (_showAddForm) {
+              setState(() {
+                _showAddForm = false;
+                _editingAddressId = null;
+              });
+            } else {
+              Navigator.pop(context);
+            }
+          },
         ),
         title: Text(
-          _showAddForm ? "Adding Shipping Address" : "Địa chỉ nhận hàng",
+          _showAddForm ? "Adding Shipping Address" : "Shipping Addresses",
           style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: _loading && _addresses.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xffDB3022))))
           : _showAddForm
-              ? _buildAddAddressForm()
-              : _buildAddressList(primaryColor),
+              ? _buildAddingAddressForm()
+              : _buildAddressList(),
       floatingActionButton: !_showAddForm
           ? FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  _showAddForm = true;
-                });
-              },
+              onPressed: _startAdd,
               backgroundColor: Colors.black,
-              child: const Icon(Icons.add, color: Colors.white),
+              shape: const CircleBorder(),
+              elevation: 4,
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
             )
           : null,
     );
   }
 
-  Widget _buildAddressList(Color primaryColor) {
-    if (_addresses.isEmpty) {
-      return const Center(child: Text("Bạn chưa có địa chỉ nhận hàng nào"));
-    }
+  Widget _buildAddressList() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      children: [
+        if (_addresses.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 40),
+            child: Center(
+              child: Text(
+                "No shipping addresses found. Tap + to add one.",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          )
+        else
+          ..._addresses.map((address) {
+            final id = address["id"] as String;
+            final name = address["fullName"] ?? "";
+            final street = address["streetAddress"] ?? "";
+            final city = address["city"] ?? "";
+            final state = address["state"] ?? "";
+            final zip = address["zipCode"] ?? "";
+            final country = address["country"] ?? "";
+            final isDefault = address["isDefault"] == true;
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _addresses.length,
-      itemBuilder: (context, index) {
-        final address = _addresses[index];
-        final id = address["id"] as String;
-        final name = address["fullName"] ?? "";
-        final phone = address["phoneNumber"] ?? "";
-        final street = address["streetAddress"] ?? "";
-        final city = address["city"] ?? "";
-        final state = address["state"] ?? "";
-        final country = address["country"] ?? "";
-        final isDefault = address["isDefault"] == true;
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          color: Colors.white,
-          elevation: 2,
-          child: InkWell(
-            onTap: () {
-              if (widget.selectMode) {
-                Provider.of<CartProvider>(context, listen: false).selectAddress(address);
-                Navigator.pop(context);
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -218,43 +279,179 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                         name,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 14,
+                          color: Colors.black,
                         ),
                       ),
-                      Row(
-                        children: [
-                          if (isDefault)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                "Mặc định",
-                                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                              ),
-                            )
-                          else
-                            TextButton(
-                              onPressed: () => _setDefault(id),
-                              child: const Text("Thiết lập mặc định", style: TextStyle(fontSize: 12)),
-                            ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, color: Colors.grey),
-                            onPressed: () => _deleteAddress(id),
+                      GestureDetector(
+                        onTap: () => _startEdit(address),
+                        child: const Text(
+                          "Edit",
+                          style: TextStyle(
+                            color: Color(0xffDB3022),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
-                        ],
-                      )
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text("$street, $city, $state", style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                  const SizedBox(height: 10),
+                  Text(
+                    street,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                      height: 1.3,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(country, style: const TextStyle(fontSize: 14, color: Colors.black87)),
-                  const SizedBox(height: 8),
-                  Text("SĐT: $phone", style: const TextStyle(fontSize: 13, color: Colors.black54)),
+                  Text(
+                    "$city, $state $zip, $country",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          _setDefaultAndSelect(address);
+                          if (widget.selectMode) {
+                            // Already popped in _setDefaultAndSelect or we can pop here directly
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(
+                                value: isDefault,
+                                activeColor: Colors.black,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                onChanged: (val) {
+                                  if (val == true) {
+                                    _setDefaultAndSelect(address);
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              "Use as the shipping address",
+                              style: TextStyle(fontSize: 13, color: Colors.black),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 20),
+                        onPressed: () => _deleteAddress(id),
+                      ),
+                    ],
+                  ),
                 ],
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildAddingAddressForm() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight - 48,
+            ),
+            child: IntrinsicHeight(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Full Name field
+                    _buildFormInput(
+                      controller: _nameController,
+                      label: "Full name",
+                      validator: (val) => val == null || val.isEmpty ? "Full name is required" : null,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Address field
+                    _buildFormInput(
+                      controller: _streetController,
+                      label: "Address",
+                      validator: (val) => val == null || val.isEmpty ? "Address is required" : null,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // City field
+                    _buildFormInput(
+                      controller: _cityController,
+                      label: "City",
+                      validator: (val) => val == null || val.isEmpty ? "City is required" : null,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // State/Province/Region field
+                    _buildFormInput(
+                      controller: _stateController,
+                      label: "State/Province/Region",
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Zip Code field
+                    _buildFormInput(
+                      controller: _zipController,
+                      label: "Zip Code (Postal Code)",
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Country field
+                    _buildFormInput(
+                      controller: _countryController,
+                      label: "Country",
+                      validator: (val) => val == null || val.isEmpty ? "Country is required" : null,
+                      suffixIcon: const Icon(Icons.chevron_right, color: Colors.grey),
+                    ),
+                    const Spacer(),
+                    const SizedBox(height: 40),
+
+                    // SAVE ADDRESS Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _saveAddress,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xffDB3022),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: const Text(
+                          "SAVE ADDRESS",
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
               ),
             ),
           ),
@@ -263,130 +460,35 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
     );
   }
 
-  Widget _buildAddAddressForm() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: "Họ và tên người nhận",
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
-              ),
-              validator: (val) => val == null || val.isEmpty ? "Vui lòng nhập tên người nhận" : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: "Số điện thoại nhận hàng",
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
-              ),
-              validator: (val) => val == null || val.isEmpty ? "Vui lòng nhập số điện thoại" : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _streetController,
-              decoration: const InputDecoration(
-                labelText: "Số nhà, tên đường (Street Address)",
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
-              ),
-              validator: (val) => val == null || val.isEmpty ? "Vui lòng nhập số nhà, tên đường" : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _cityController,
-              decoration: const InputDecoration(
-                labelText: "Thành phố / Tỉnh (City)",
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
-              ),
-              validator: (val) => val == null || val.isEmpty ? "Vui lòng nhập thành phố" : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _stateController,
-              decoration: const InputDecoration(
-                labelText: "Quận / Huyện / Bang (State)",
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _zipController,
-              decoration: const InputDecoration(
-                labelText: "Mã Bưu điện (Zip Code)",
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _countryController,
-              decoration: const InputDecoration(
-                labelText: "Quốc gia (Country)",
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
-              ),
-              validator: (val) => val == null || val.isEmpty ? "Vui lòng nhập quốc gia" : null,
-            ),
-            const SizedBox(height: 16),
-            CheckboxListTile(
-              title: const Text("Đặt làm địa chỉ nhận hàng mặc định"),
-              value: _isDefaultAddress,
-              onChanged: (val) {
-                setState(() {
-                  _isDefaultAddress = val ?? false;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      setState(() {
-                        _showAddForm = false;
-                      });
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: const Text("HỦY"),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _saveAddress,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xffDB3022),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: const Text("LƯU ĐỊA CHỈ"),
-                  ),
-                ),
-              ],
-            )
-          ],
+  Widget _buildFormInput({
+    required TextEditingController controller,
+    required String label,
+    String? Function(String?)? validator,
+    Widget? suffixIcon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(4),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          border: InputBorder.none,
+          suffixIcon: suffixIcon,
         ),
+        validator: validator,
       ),
     );
   }

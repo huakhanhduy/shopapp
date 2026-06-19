@@ -43,4 +43,15 @@ public class ReviewController {
         String userEmail = principal.getName();
         return ResponseEntity.ok(reviewService.createReview(productId, userEmail, rating, comment, images));
     }
+
+    @GetMapping("/reviews/me")
+    public ResponseEntity<List<Review>> getMyReviews(
+            Principal principal
+    ) {
+        if (principal == null) {
+            throw new RuntimeException("Unauthorized: User not logged in");
+        }
+        String userEmail = principal.getName();
+        return ResponseEntity.ok(reviewService.getReviewsByCustomerEmail(userEmail));
+    }
 }

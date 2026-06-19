@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Tunnel config files
+localtunnel.txt
+localtunnel_new.txt
+

@@ -94,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(LoginRequest request) {
         java.util.Optional<StaffAccount> accountOpt = staffAccountRepository.findByEmail(request.getEmail());
         if (accountOpt.isEmpty()) {
-            throw new RuntimeException("Email không tồn tại");
+            throw new RuntimeException("Tài khoản không tồn tại");
         }
 
         try {
@@ -118,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse socialLogin(String email, String provider, String providerId, String firstName, String lastName) {
         java.util.Optional<StaffAccount> existing = staffAccountRepository.findByEmail(email);
         if (existing.isEmpty()) {
-            throw new RuntimeException("Tài khoản chưa tồn tại, vui lòng đăng ký");
+            throw new RuntimeException("Tài khoản không tồn tại");
         }
         StaffAccount account = existing.get();
 
@@ -148,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
         newAccount.setEmail(email);
         newAccount.setFirstName(firstName != null && !firstName.isEmpty() ? firstName : "User");
         newAccount.setLastName(lastName != null && !lastName.isEmpty() ? lastName : "Social");
-        newAccount.setPasswordHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
+        newAccount.setPasswordHash(passwordEncoder.encode("123456"));
         newAccount.setRole(userRole);
         newAccount.setActive(true);
         StaffAccount account = staffAccountRepository.save(newAccount);

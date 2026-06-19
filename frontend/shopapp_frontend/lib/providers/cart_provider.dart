@@ -242,6 +242,17 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearLocalData() {
+    _items.clear();
+    _wishlist.clear();
+    _customerId = null;
+    _appliedPromoCode = null;
+    _discountPercent = 0;
+    _selectedAddress = null;
+    _selectedPaymentCard = null;
+    notifyListeners();
+  }
+
   double get subtotal {
     double sum = 0;
     for (var item in _items) {

@@ -259,6 +259,14 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
+                  product.brand,
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
                   product.productName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

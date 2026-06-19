@@ -1,3 +1,5 @@
+import 'product.dart';
+
 class Review {
   final String id;
   final String userName;
@@ -7,6 +9,7 @@ class Review {
   final String comment;
   final List<String> images;
   final DateTime createdAt;
+  final Product? product;
 
   Review({
     required this.id,
@@ -17,6 +20,7 @@ class Review {
     required this.comment,
     required this.images,
     required this.createdAt,
+    this.product,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {
@@ -30,6 +34,11 @@ class Review {
     final imagesJson = json['images'] as List<dynamic>?;
     final List<String> images = imagesJson?.map((e) => e.toString()).toList() ?? [];
 
+    Product? productObj;
+    if (json['product'] != null) {
+      productObj = Product.fromJson(json['product'] as Map<String, dynamic>);
+    }
+
     return Review(
       id: json['id'] ?? '',
       userName: userName,
@@ -41,6 +50,7 @@ class Review {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
+      product: productObj,
     );
   }
 }

@@ -234,6 +234,16 @@ class HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 6),
 
                         Text(
+                          product.brand,
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 11,
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Text(
                           product.productName,
 
                           maxLines: 1,

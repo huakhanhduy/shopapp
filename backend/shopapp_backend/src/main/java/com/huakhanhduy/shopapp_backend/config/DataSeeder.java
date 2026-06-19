@@ -91,6 +91,10 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        if (roleRepository.count() > 0 && productRepository.count() > 0) {
+            System.out.println("=== ShopApp DataSeeder: Dữ liệu đã tồn tại trong database, bỏ qua bước Seed để giữ lại giỏ hàng/địa chỉ ===");
+            return;
+        }
         System.out.println("=== ShopApp DataSeeder: Bắt đầu xóa dữ liệu cũ và tạo dữ liệu mới ===");
 
         // ============================================================

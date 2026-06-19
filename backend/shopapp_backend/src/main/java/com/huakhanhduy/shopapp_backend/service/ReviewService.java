@@ -12,4 +12,6 @@ public interface ReviewService {
 
     Review createReview(UUID productId, String userEmail, int rating, String comment, List<MultipartFile> images);
 
+    List<Review> getReviewsByCustomerEmail(String customerEmail);
+
 }
